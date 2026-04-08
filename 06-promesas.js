@@ -1,0 +1,1 @@
+// Cómo maneja JS las operaciones asíncronas
