@@ -23,12 +23,35 @@
 
 // console.log("Esto es urgente y no podemos esperar tu tonta promesa!!!");
 // console.log("Esta suma es importantísima para el Artemis 2:", 6 + 3);
+// function getCharacters(page = 1) {
+//     return fetch(`https://rickandmortyapi.com/api/character?page=${page}`)
+//         .then((res) => res.json())
+//         .then((data) => {
+//             data.results.forEach((character, idx) => {
+//                 console.log(`${idx + 1}: ${character.name}`);
+//             });
+//         })
+//         .catch((err) => console.log(`Error: ${err}`))
+//         .finally(() => console.log("Petición de personajes finalizada"));
 
-fetch("https://rickandmortyapi.com/api/character")
-    .then((res) => res.json())
-    .then((data) => {
+// }
+
+getCharacters(20);
+
+//Sintaxis con async / await
+async function getCharacters(page = 1) {
+    try {
+        const res = await fetch(`https://rickandmortyapi.com/api/character?page=${page}`);
+        const data = await res.json();
         data.results.forEach((character, idx) => {
             console.log(`${idx + 1}: ${character.name}`);
         });
-    })
-    .catch((err) => console.log(`Error: ${err}`));
+    } catch (err) {
+        console.log(`Error: ${err}`);
+    }
+    finally {
+        console.log("Petición de personajes finalizada");
+    }
+
+
+}
