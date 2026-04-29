@@ -15,4 +15,3 @@ async function getData(url) {
 const users = await getData('https://jsonplaceholder.typicode.com/users/3');
 console.log(users);
 
-
