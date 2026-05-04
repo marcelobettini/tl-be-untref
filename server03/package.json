@@ -1,0 +1,16 @@
+{
+  "name": "server03",
+  "version": "0.0.1",
+  "description": "Servidor con Express que actúa como refactorización de server02",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Marcelo Bettini",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

@@ -10,8 +10,8 @@ const server = http.createServer((req, res) => {
             res.end("Bienvenidos a la API de Recetas");
             break;
         case "/docs":
-            res.writeHead(200, { "content-type": "text/plain; charset=utf8" });
-            res.end("Aquí va la documentación de la API");
+            res.writeHead(200, { "content-type": "text/html; charset=utf8" });
+            res.end("<h1>Aquí va la documentación de la API</h1>");
             break;
         case "/recipes":
             res.writeHead(200, { "content-type": "application/json" });
