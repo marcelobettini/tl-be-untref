@@ -1,32 +1,69 @@
 // Router de tareas: define la estructura de endpoints del CRUD
 import { Router } from "express";
+import { getAll, getById, add } from "../services/fileStore.js";
 const router = Router();
 
+// valores validos para el campo priority
+const VALID_PRIORITIES = ["low", "mid", "high"];
 // GET /api/v1/tasks
 router.get('/', (req, res) => {
-    res.json({ message: "Se listarán todas las tareas. Soportará filtros (?completed=true|false o ?search=keyword)" });
+    let tasks = getAll();
+
+    const { completed, search } = req.query;
+    const isCompleted = completed === "true";
+    if (completed !== undefined) {
+        tasks = tasks.filter(t => t.completed === isCompleted);
+    }
+    if (search) {
+        const keyword = search.toLowerCase();
+        tasks = tasks.filter(t => t.title.toLowerCase().includes(keyword) || t.description.toLowerCase().includes(keyword));
+    }
+    if (tasks.length) {
+        res.json({ tasks });
+    } else {
+        res.status(404).json({ message: "No se encontraron tareas" });
+    }
 });
 
 // GET /api/v1/tasks/:id
 router.get("/:id", (req, res) => {
     const { id } = req.params;
-    res.json({ message: `Se mostrará la tarea con el id ${id}` });
+    const task = getById(id);
+    if (!task) {
+        return res.status(404).json({ message: `No se encontró la tarea con id ${id}` });
+    }
+    res.json(task);
 });
 
 // POST /api/v1/tasks
 router.post("/", (req, res) => {
-    console.log(req.body);
-    res.status(200).json({
-        message: "Se creará una tarea con los datos del body",
-        data: req.body
-    });
+    const { title, description = "", priority = "low" } = req.body;
+    if (!title) {
+        return res.status(400).json({ message: "El campo title es obligatorio" });
+    }
+    if (!VALID_PRIORITIES.includes(priority)) {
+        return res.status(400).json({ message: `El campo priority debe ser uno de los siguientes valores: ${VALID_PRIORITIES.join(", ")}` });
+    }
+
+    const now = new Date().toISOString();
+    const newTask = {
+        id: crypto.randomUUID(),
+        title,
+        description,
+        priority,
+        completed: false,
+        createdAt: now,
+        updatedAt: now
+    };
+    add(newTask);
+    res.status(201).json(newTask);
 });
 
 // PATCH /api/v1/tasks/:id
 router.patch("/:id", (req, res) => {
     const { id } = req.params;
     res.json({
-        message: `Se actualizará parcialmente la tarea con id ${id}`,
+        message: `Se actualizará parcialmente la tarea con id ${id}, y se guardará en la base de datos`,
         data: req.body
     });
 });
@@ -36,14 +73,14 @@ router.patch("/:id", (req, res) => {
 router.patch("/:id/toggle", (req, res) => {
     const { id } = req.params;
     res.json({
-        message: `Se cambiará el campo completed al valor contrario para la tarea con id ${id}`,
+        message: `Se cambiará el campo completed al valor contrario para la tarea con id ${id}, y se guardará en la base de datos`,
 
     });
 });
 
 router.delete("/:id", (req, res) => {
     const { id } = req.params;
-    res.json({ message: `Se eliminará la tarea con id ${id}` });
+    res.json({ message: `Se eliminará la tarea con id ${id}, y se guardará en la base de datos` });
 });
 
 

@@ -45,7 +45,6 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ status: 500, error: 'Internal Server Error' });
-
 });
 
 app.listen(PORT, (err) => {
