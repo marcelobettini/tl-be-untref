@@ -34,7 +34,7 @@ function persist() {
 }
 
 function getAll() {
-    return tasks;
+    return [...tasks]; // Devolvemos una copia para evitar modificaciones externas    
 }
 
 function getById(id) {

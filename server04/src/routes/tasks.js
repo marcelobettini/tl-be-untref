@@ -52,8 +52,8 @@ router.post("/", (req, res) => {
         description,
         priority,
         completed: false,
-        createdAt: now,
-        updatedAt: now
+        createdAt: now, //TimeStamp de creación
+        updatedAt: now //TimeStamp de última actualización, inicialmente igual al de creación
     };
     add(newTask);
     res.status(201).json(newTask);
