@@ -46,8 +46,19 @@ function add(newTask) {
     persist();
 }
 
+function update(id, updatedFields) {
+    //encontrar en el arreglo de tareas la tarea con el id dado
+    const index = tasks.findIndex(t => t.id === id);
+    if (index === -1) return null; // Si no se encuentra la tarea, devolvemos null
+    // Si se encuentra, actualizamos los campos de la tarea con los campos proporcionados en updatedFields
+    tasks[index] = { ...tasks[index], ...updatedFields };
+    const updatedTask = tasks[index];
+    persist();
+    return updatedTask;
+}
+
 
 load();
 
-export { getAll, persist, getById, add };
+export { getAll, persist, getById, add, update };
 
