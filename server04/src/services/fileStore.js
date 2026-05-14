@@ -57,6 +57,14 @@ function update(id, updatedFields) {
     return updatedTask;
 }
 
+function remove(id) {
+    const index = tasks.findIndex(t => t.id === id);
+    if (index === -1) return false;
+    tasks.splice(index, 1);
+    persist();
+    return true;
+}
+
 
 load();
 

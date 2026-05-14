@@ -94,6 +94,9 @@ router.patch("/:id/toggle", (req, res) => {
 
 router.delete("/:id", (req, res) => {
     const { id } = req.params;
+    const removed = remove(id);
+    if (!removed) return res.status(404).json({ error: 'Task not found' }); // podríamos usar incluso getById
+    res.status(204).send(); //no devolvemos nada porque el 204 No Content es un estándar para operaciones de borrado exitosas. Dice "La operación fue exitosa y no hay nada que devolver"
     res.json({ message: `Se eliminará la tarea con id ${id}, y se guardará en la base de datos` });
 });
 
