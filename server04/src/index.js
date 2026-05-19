@@ -1,7 +1,8 @@
 // Entry point: Configuramos Express y arrancamos el server
 import express from 'express';
 import tasksRouter from './routes/tasks.js';
-import { getDB } from './db/mongoClient.js';
+import healthRouter from "./routes/health.js";
+import { connectDB } from './db/mongoClient.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 app.disable("x-powered-by");
@@ -39,15 +40,8 @@ app.get(API_PREFIX, (req, res) => {
 // Montamos el router de tareas bajo el prefijo /api/v1/tasks
 app.use(`${API_PREFIX}/tasks`, tasksRouter);
 
-app.get("/health", async (req, res) => {
-    const timestamp = new Date().toISOString();
-    try {
-        await getDB().command({ ping: 1 });
-    } catch {
-        // 503 Service Unavailable: el server corre pero la dependencia crítica no responde
-        res.status(503).json({ status: 'error', db: 'unreachable', timestamp });
-    }
-});
+app.use("/health", healthRouter);
+
 // 404 para rutas no definidas
 app.use((req, res) => {
     res.status(404).json({ status: 404, error: 'Invalid Route' });
@@ -59,6 +53,15 @@ app.use((err, req, res, next) => {
     res.status(500).json({ status: 500, error: 'Internal Server Error' });
 });
 
-app.listen(PORT, (err) => {
-    console.log(err ? err.message : `http://localhost:${PORT}`);
-});
+async function main() {
+    await connectDB();
+    app.listen(PORT, () => {
+        console.log(`http://localhost:${PORT}`);
+    });
+}
+
+main().catch(err => {
+    console.log('Error al iniciar el servidor:', err);
+    process.exit(1);
+}
+);
