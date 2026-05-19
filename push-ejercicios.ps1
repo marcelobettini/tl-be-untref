@@ -27,7 +27,7 @@ if ($LASTEXITCODE -ne 0) {
     }
 }
 
-$hasUpstream = git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>$null
+$hasUpstream = git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>$null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Enviando cambios de '$Branch' a origin..."
     git push
