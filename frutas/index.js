@@ -1,6 +1,7 @@
 import express from 'express';
 import { MongoClient } from 'mongodb';
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT ?? 3003;
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -35,6 +36,38 @@ app.get("/frutas/precio/:precio", async (req, res) => {
         return res.status(404).json({ mensaje: "Ninguna en ese rango de precios" });
     }
     res.json(result);
+});
+
+app.post("/frutas", async (req, res) => {
+    const nuevaFruta = req.body;
+    if (nuevaFruta === undefined) {
+        return res.status(400).json({ mensaje: "Error en el formato de los datos" });
+    }
+    frutas.insertOne(nuevaFruta)
+        .then(() => {
+            res.status(201).json(nuevaFruta);
+        })
+        .catch((err => {
+            res.status(500).json({ mensaje: "Error al grabar en DB." });
+        }));
+
+});
+
+app.put("/frutas/:id", async (req, res) => {
+    const { id } = req.params;
+    const nuevosDatos = req.body;
+    if (!nuevosDatos) {
+        return res.status(400).json({ mensaje: "Error en el formato de los datos" });
+    }
+    frutas.updateOne({ id: Number(id) }, { $set: nuevosDatos })
+        .then(() => {
+            res.status(200).json(nuevosDatos);
+        })
+        .catch(() => {
+            res.status(500).json({ mensaje: "Error al grabar en DB." });
+        });
+
+
 });
 
 app.use((req, res) => {
