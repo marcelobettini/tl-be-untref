@@ -1,8 +1,8 @@
 import express from "express";
-import frutasRouter from "./routes/frutas.js";
+import frutasRouter from "./rutas/frutasRouter.js";
 import healthRouter from "./routes/health.js";
 import infoRouter from "./routes/info.js"; // Importar el nuevo router
-import { connectDB } from "./data/mongoClient.js";
+import { connectDB } from "./services/data.js";
 const app = express();
 const PORT = process.env.PORT || 3005;
 
@@ -24,6 +24,7 @@ app.get(API_PREFIX, (req, res) => {
 });
 
 // Montamos el router de frutas bajo el prefijo /api/v1/frutas
+// Cualquier petición que empiece con /api/v1/frutas dásela al frutasRouter
 app.use(`${API_PREFIX}/frutas`, frutasRouter);
 
 // Montamos el router de health bajo el prefijo /api/v1/health
@@ -38,13 +39,31 @@ app.use((err, req, res, next) => {
   res.status(500).json({ status: 500, error: "Internal Server Error" });
 });
 
+// Iniciar el servidor y conectar a la base de datos antes de aceptar conexiones
 async function main() {
   await connectDB();
-  app.listen(PORT, (err) => {
-    console.log(
-      err ? err.message : `Server running on http://localhost:${PORT}`,
-    );
+  const server = app.listen(PORT, () => {
+    console.log({
+      status: 200,
+      message: `Server running on http://localhost:${PORT}`,
+    });
+  });
+
+  server.on("error", (err) => {
+    console.error({
+      status: 500,
+      error: "Internal Server Error",
+      details: err.message,
+    });
+    process.exit(1);
   });
 }
 
-main();
+main().catch((err) => {
+  console.error({
+    status: 500,
+    error: "Failed to start application",
+    details: err.message,
+  });
+  process.exit(1);
+});
