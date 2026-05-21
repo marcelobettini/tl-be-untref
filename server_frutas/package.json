@@ -1,0 +1,17 @@
+{
+  "name": "server_frutas",
+  "version": "0.0.1",
+  "description": "Servidor de practica que gestiona un CRUD a una base de datos mongodb con documentos que mapean frutas y verduras",
+  "license": "ISC",
+  "author": "Pablo Santiago",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --watch --env-file=.env src/index.js",
+    "test": "echo \"Error: no hay test especificado\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongodb": "^7.2.0"
+  }
+}
