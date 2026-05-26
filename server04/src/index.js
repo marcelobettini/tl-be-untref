@@ -42,15 +42,18 @@ app.use(`${API_PREFIX}/tasks`, tasksRouter);
 
 app.use("/health", healthRouter);
 
-// 404 para rutas no definidas
-app.use((req, res) => {
-    res.status(404).json({ status: 404, error: 'Invalid Route' });
+// 404 para rutas no definidas, trabaja en conjunto con el error handler global
+app.use((req, res, next) => {
+    const error = new Error(`Not Found: ${req.method} ${req.originalUrl}`);
+    error.status = 404;
+    next(error);
 });
 
 // Manejador global de errores (si le paso 4 params Express lo reconoce como un error handler)
 app.use((err, req, res, next) => {
+    const status = err.status || 500;
     console.error(err.stack);
-    res.status(500).json({ status: 500, error: 'Internal Server Error' });
+    res.status(status).json({ status, error: err.message || 'Internal Server Error' });
 });
 
 async function main() {
