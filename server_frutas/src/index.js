@@ -1,7 +1,7 @@
 import express from "express";
 import frutasRouter from "./rutas/frutasRouter.js";
-import healthRouter from "./routes/health.js";
-import infoRouter from "./routes/info.js"; // Importar el nuevo router
+import healthRouter from "./rutas/healthRouter.js";
+import infoRouter from "./rutas/infoRouter.js"; // Corregido el path y nombre
 import { connectDB } from "./services/data.js";
 const app = express();
 const PORT = process.env.PORT || 3005;
@@ -9,14 +9,22 @@ const PORT = process.env.PORT || 3005;
 // Deshabilitar el header X-Powered-By para mejorar la seguridad al no revelar que estamos usando Express.
 app.disable("x-powered-by");
 
+// Configurar Express para que el JSON de salida esté formateado (pretty-print) por defecto.
+app.set("json spaces", 2);
+
 // Parsear el body de las request como JSON
 app.use(express.json());
 
 // Recuperar la URI de MongoDB desde las variables de entorno y mostrarla en consola
-// console.log(process.env.MONGODB_URI);
+// console.log("MONGODB_URI cargada:", process.env.MONGODB_URI);
 
 // versionado de la API
 const API_PREFIX = "/api/v1";
+
+// Ruta raíz del servidor: redirige a la información de la API
+app.get("/", (req, res) => {
+  res.redirect(`${API_PREFIX}/info`);
+});
 
 // Ruta raíz: info de la API
 app.get(API_PREFIX, (req, res) => {

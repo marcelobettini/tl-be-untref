@@ -8,7 +8,7 @@ export async function getAllFrutas() {
 }
 
 export async function getFrutaById(id) {
-  return await frutas().findOne({ _id: new ObjectId(id) });
+  return await frutas().findOne({ id: parseInt(id, 10) });
 }
 
 /**
@@ -32,7 +32,7 @@ export async function getFrutasByName(name) {
 
 export async function getFrutasByPrice(price) {
   return await frutas()
-    .find({ precio: { $gte: parseFloat(price) } })
+    .find({ importe: { $gte: parseFloat(price) } })
     .toArray();
 }
 
