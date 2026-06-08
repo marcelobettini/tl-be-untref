@@ -1,10 +1,10 @@
 // Entry point: Configuramos Express y arrancamos el server
 import express from 'express';
-import swaggerUi from 'swagger-ui-express';
+
 import tasksRouter from './routes/tasks.js';
 import healthRouter from "./routes/health.js";
 import { connectDB } from './db/mongoClient.js';
-import openapiSpec from './docs/openapi.js';
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 app.disable("x-powered-by");
@@ -18,12 +18,11 @@ const API_PREFIX = '/api/v1';
 
 // Montamos el router de tareas bajo el prefijo /api/v1/tasks
 app.use(`${API_PREFIX}/tasks`, tasksRouter);
+// TODO: Spec JSON crudo (útil para clientes externos)
 
-// Spec JSON crudo (útil para clientes externos)
-app.get(`${API_PREFIX}/openapi.json`, (req, res) => res.json(openapiSpec));
 
-// Swagger UI en /api/v1 — montado después de /tasks para que Express resuelva primero la ruta más específica
-app.use(API_PREFIX, swaggerUi.serve, swaggerUi.setup(openapiSpec));
+// TODO: Swagger UI en /api/v1 — montado después de /tasks para que Express resuelva primero la ruta más específica
+
 
 app.use("/health", healthRouter);
 
