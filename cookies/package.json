@@ -1,0 +1,16 @@
+{
+  "name": "cookies",
+  "version": "1.0.0",
+  "description": "Manejo de Cookies",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --watch --env-file .env index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Marce",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1"
+  }
+}

@@ -1,104 +1,139 @@
-// Router de tareas: define la estructura de endpoints del CRUD
-import { Router } from "express";
-import { getAll, getById, add, update } from "../services/fileStore.js";
+// Router de tareas: define todos los endpoints del CRUD.
+
+import { Router } from 'express';
+import { randomUUID } from 'crypto';
+import { getAll, getById, add, update, remove } from '../db/tasksStore.js';
+
+
 const router = Router();
 
-// valores validos para el campo priority
-const VALID_PRIORITIES = ["low", "mid", "high"];
-// GET /api/v1/tasks
-router.get('/', (req, res) => {
-    let tasks = getAll();
+// Valores válidos para el campo priority
+const VALID_PRIORITIES = ['low', 'mid', 'high'];
 
-    const { completed, search } = req.query;
-    const isCompleted = completed === "true";
-    if (completed !== undefined) {
-        tasks = tasks.filter(t => t.completed === isCompleted);
-    }
-    if (search) {
-        const keyword = search.toLowerCase();
-        tasks = tasks.filter(t => t.title.toLowerCase().includes(keyword) || t.description.toLowerCase().includes(keyword));
-    }
-    if (tasks.length) {
+// ─── GET /api/v1/tasks ────────────────────────────────────────────────────────
+// Lista todas las tareas. Acepta dos query params opcionales que se pueden
+// combinar entre sí:
+//   ?completed=true|false  →  filtra por estado de completitud
+//   ?search=keyword        →  busca la keyword en título o descripción (case-insensitive)
+router.get('/', async (req, res, next) => {
+    try {
+        const { completed, search } = req.query;
+        const tasks = await getAll({ completed, search });
+        if (!tasks.length) return res.status(404).json({ error: 'Task not found' });
         res.json(tasks);
-    } else {
-        res.status(404).json({ message: "No se encontraron tareas" });
+    } catch (err) {
+        next(err);
     }
 });
 
-// GET /api/v1/tasks/:id
-router.get("/:id", (req, res) => {
-    const { id } = req.params;
-    const task = getById(id);
-    if (!task) {
-        return res.status(404).json({ message: `No se encontró la tarea con id ${id}` });
+// ─── PATCH /api/v1/tasks/:id/toggle ──────────────────────────────────────────
+// Invierte el campo completed sin requerir body.
+// IMPORTANTE: debe declararse antes de PATCH /:id porque Express evalúa rutas
+// en orden de declaración y /:id capturaría '/uuid/toggle' si va primero.
+router.patch('/:id/toggle', async (req, res, next) => {
+    try {
+        const task = await getById(req.params.id);
+        if (!task) return res.status(404).json({ error: 'Task not found' });
+
+        const updated = await update(req.params.id, {
+            completed: !task.completed,
+            updatedAt: new Date().toISOString(),
+        });
+
+        res.json(updated);
+    } catch (err) {
+        next(err);
     }
-    res.json(task);
 });
 
-// POST /api/v1/tasks
-router.post("/", (req, res) => {
-    const { title, description = "", priority = "low" } = req.body;
-    if (!title) {
-        return res.status(400).json({ message: "El campo title es obligatorio" });
+// ─── GET /api/v1/tasks/:id ────────────────────────────────────────────────────
+router.get('/:id', async (req, res, next) => {
+    try {
+        const task = await getById(req.params.id);
+        if (!task) return res.status(404).json({ error: 'Task not found' });
+        res.json(task);
+    } catch (err) {
+        next(err);
     }
-    if (!VALID_PRIORITIES.includes(priority)) {
-        return res.status(400).json({ message: `El campo priority debe ser uno de los siguientes valores: ${VALID_PRIORITIES.join(", ")}` });
-    }
-
-    const now = new Date().toISOString();
-    const newTask = {
-        id: crypto.randomUUID(),
-        title,
-        description,
-        priority,
-        completed: false,
-        createdAt: now, //TimeStamp de creación
-        updatedAt: now //TimeStamp de última actualización, inicialmente igual al de creación
-    };
-    add(newTask);
-    res.status(201).json(newTask);
 });
 
-// PATCH /api/v1/tasks/:id
-router.patch("/:id", (req, res) => {
-    const { id } = req.params;
-    const task = getById(id);
-    if (!task) {
-        return res.status(404).json({ message: `No se encontró la tarea con id ${id}` });
+// ─── POST /api/v1/tasks ───────────────────────────────────────────────────────
+// Crea una tarea nueva. Campos requeridos: title.
+// Campos opcionales con defaults: description (''), priority ('low'), completed (false).
+// authorId se toma del payload del JWT (req.user.sub).
+router.post('/', async (req, res, next) => {
+    try {
+        const { title, description = '', priority = 'low' } = req.body;
+
+        if (!title) {
+            return res.status(400).json({ error: 'title is required' });
+        }
+
+        if (!VALID_PRIORITIES.includes(priority)) {
+            return res
+                .status(400)
+                .json({ error: `priority must be one of: ${VALID_PRIORITIES.join(', ')}` });
+        }
+
+        const now = new Date().toISOString();
+        const task = {
+            //TODO resolver inconsistencias de generación de id y _id
+            title,
+            description,
+            priority,
+            completed: false,
+            createdAt: now,
+            updatedAt: now,
+        };
+
+        await add(task);
+        res.status(201).json(task);
+    } catch (err) {
+        next(err);
     }
-    const { title, description, priority, completed } = req.body;
-    if (priority && !VALID_PRIORITIES.includes(priority)) {
-        return res.status(400).json({ message: `El campo priority debe ser uno de los siguientes valores: ${VALID_PRIORITIES.join(", ")}` });
+});
+
+// ─── PATCH /api/v1/tasks/:id ──────────────────────────────────────────────────
+// Actualización parcial: solo se modifican los campos presentes en el body.
+// id, createdAt no son actualizables. updatedAt se renueva automáticamente.
+router.patch('/:id', async (req, res, next) => {
+    try {
+        const task = await getById(req.params.id);
+        if (!task) return res.status(404).json({ error: 'Task not found' });
+
+        const { title, description, priority, completed } = req.body;
+
+        if (priority !== undefined && !VALID_PRIORITIES.includes(priority)) {
+            return res
+                .status(400)
+                .json({ error: `priority must be one of: ${VALID_PRIORITIES.join(', ')}` });
+        }
+
+        // Construimos el objeto de cambios con solo los campos provistos
+        const fields = { updatedAt: new Date().toISOString() };
+        if (title !== undefined) fields.title = title;
+        if (description !== undefined) fields.description = description;
+        if (priority !== undefined) fields.priority = priority;
+        if (completed !== undefined) fields.completed = completed;
+
+        const updated = await update(req.params.id, fields);
+        res.json(updated);
+    } catch (err) {
+        next(err);
     }
-    // construir el objeto con los campos a actualizar, solo si fueron proporcionados en el body
-    const updatedFields = {};
-    if (title) updatedFields.title = title;
-    if (description) updatedFields.description = description;
-    if (priority) updatedFields.priority = priority;
-    if (completed) updatedFields.completed = completed;
-    updatedFields.updatedAt = new Date().toISOString(); // Actualizamos el timestamp de última actualización
-
-    const updatedTask = update(id, updatedFields);
-    res.json(updatedTask);
 });
 
-// PATCH /api/v1/tasks/:id/toggle
-// Invierte el campo completed (true -> false, false -> true). No necesitamos el body
-router.patch("/:id/toggle", (req, res) => {
-    const { id } = req.params;
-    res.json({
-        message: `Se cambiará el campo completed al valor contrario para la tarea con id ${id}, y se guardará en la base de datos`,
-
-    });
+// ─── DELETE /api/v1/tasks/:id ─────────────────────────────────────────────────
+// 204 No Content es la respuesta estándar REST para un DELETE exitoso:
+// la operación fue exitosa y no hay cuerpo que devolver.
+router.delete('/:id', async (req, res, next) => {
+    try {
+        const removed = await remove(req.params.id);
+        if (!removed) return res.status(404).json({ error: 'Task not found' });
+        res.status(204).send();
+    } catch (err) {
+        next(err);
+    }
 });
-
-router.delete("/:id", (req, res) => {
-    const { id } = req.params;
-    const removed = remove(id);
-    if (!removed) return res.status(404).json({ error: 'Task not found' }); // podríamos usar incluso getById
-    res.status(204).send(); //no devolvemos nada porque el 204 No Content es un estándar para operaciones de borrado exitosas. Dice "La operación fue exitosa y no hay nada que devolver"
-});
-
-
 
 export default router;
