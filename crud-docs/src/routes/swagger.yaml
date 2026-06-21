@@ -1,0 +1,120 @@
+openapi: 3.0.0
+info:
+  title: Todo API
+  version: 1.0.0
+  description: API para la gestión de tareas (CRUD) con MongoDB
+
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Servidor Local
+
+components:
+  schemas:
+    Task:
+      type: object
+      required:
+        - title
+      properties:
+        id:
+          type: string
+          example: "664f1a2b3c4d5e6f7a8b9c0d"
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, mid, high]
+          default: low
+        completed:
+          type: boolean
+          default: false
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+paths:
+  /tasks:
+    get:
+      summary: Obtiene todas las tareas
+      parameters:
+        - name: completed
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: Lista de tareas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      summary: Crea una nueva tarea
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Task"
+      responses:
+        201:
+          description: Tarea creada
+
+  /tasks/{id}:
+    get:
+      summary: Obtiene una tarea por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Tarea encontrada
+        404:
+          description: No encontrada
+    patch:
+      summary: Actualiza parcialmente una tarea
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Task"
+      responses:
+        200:
+          description: Tarea actualizada
+    delete:
+      summary: Elimina una tarea
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Tarea eliminada
+
+  /tasks/{id}/toggle:
+    patch:
+      summary: Invierte el estado de completado
+      responses:
+        200:
+          description: Estado actualizado
