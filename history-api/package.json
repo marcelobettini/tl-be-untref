@@ -1,0 +1,19 @@
+{
+  "name": "historiador",
+  "version": "0.0.1",
+  "description": "API que permite a un usuario registrado hacer preguntas sobre historia argentina. Las preguntas son respondidas por un LLM.",
+  "license": "ISC",
+  "author": "Marcelo Bettini",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --env-file=.env --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google/genai": "^2.8.0",
+    "express": "^5.2.1",
+    "morgan": "^1.11.0",
+    "openai": "^6.42.0"
+  }
+}
