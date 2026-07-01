@@ -1,0 +1,4 @@
+# THE ORACLE — local ignores (the root .gitignore already covers node_modules and .env)
+# Coverage / test artifacts
+coverage/
+*.lcov
