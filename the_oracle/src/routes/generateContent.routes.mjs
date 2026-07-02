@@ -4,7 +4,7 @@
 // El manejo de errores se delega al middleware errorHandler (F4) — solo llamamos
 // a next(err) en caso de fallo. Nunca exponer errores del SDK directamente.
 
-import { Router } from "express";
+import { Router } from 'express';
 import { askGemini as defaultAskGemini } from "../services/gemini.service.mjs";
 import { validatePrompt } from "../middlewares/validatePrompt.mjs";
 

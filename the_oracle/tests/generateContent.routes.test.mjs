@@ -3,7 +3,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import express from "express";
+import express from 'express';
 import request from "supertest";
 import { buildGenerateContentRouter } from "../src/routes/generateContent.routes.mjs";
 import { AppError } from "../src/errors/AppError.mjs";
@@ -14,7 +14,7 @@ import { DEFAULT_MODEL, PROMPT_MAX_LENGTH } from "../src/config.mjs";
 function buildApp(ask) {
   const app = express();
   app.use(express.json());
-  app.use("/", buildGenerateContentRouter({ ask }));
+  app.use('/', buildGenerateContentRouter({ ask }));
   return app;
 }
 

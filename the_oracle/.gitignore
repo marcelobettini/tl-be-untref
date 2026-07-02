@@ -2,3 +2,6 @@
 # Coverage / test artifacts
 coverage/
 *.lcov
+
+# Hermes meta-trabajo (PLAN, .hermes/state, etc.) — no es código del feature
+.hermes/

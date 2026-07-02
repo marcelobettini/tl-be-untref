@@ -3,7 +3,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import express from "express";
+import express from 'express';
 import request from "supertest";
 import { errorHandler } from "../src/middlewares/errorHandler.mjs";
 import { AppError } from "../src/errors/AppError.mjs";
