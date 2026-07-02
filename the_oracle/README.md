@@ -93,6 +93,8 @@ para debugging, nunca se devuelve al cliente.
 the_oracle/
 ├── IDEA.md                            # enunciado original del ejercicio
 ├── README.md                          # este archivo
+├── docs/
+│   └── IMPLEMENTATION.md              # bitácora persistente de features (1 párrafo por feature)
 ├── .env.example                       # template de variables de entorno
 ├── .gitignore                         # ignores locales
 ├── server.mjs                         # entry point, conecta rutas + error handler
