@@ -1,0 +1,8 @@
+{
+  "name": "intro-js",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Ejercicios introductorios de JS (material del profesor Marcelo Bettini). Ya es ESM (los archivos usan import). Este package.json existe para que Node no herede 'type' del package.json de la raíz y para hacer explícita la naturaleza ESM del sub-proyecto.",
+  "main": "01-variables.js",
+  "type": "module"
+}
