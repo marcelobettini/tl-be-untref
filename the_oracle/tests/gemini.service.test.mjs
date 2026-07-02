@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { askGemini } from '../src/services/gemini.service.mjs';
 import { AppError } from '../src/errors/AppError.mjs';
+import { DEFAULT_MODEL } from '../src/config.mjs';
 
 // --- Test fixtures ---------------------------------------------------------
 
@@ -28,9 +29,9 @@ test('askGemini returns { text, model } on success', async () => {
   const model = fakeModel(async () => ({
     response: { text: () => 'hello world' },
   }));
-  const out = await askGemini('hi', { model, modelName: 'gemini-flash-latest' });
+  const out = await askGemini('hi', { model, modelName: DEFAULT_MODEL });
   assert.equal(out.text, 'hello world');
-  assert.equal(out.model, 'gemini-flash-latest');
+  assert.equal(out.model, DEFAULT_MODEL);
 });
 
 test('askGemini throws AppError 400 on empty prompt', async () => {

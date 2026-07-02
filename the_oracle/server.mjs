@@ -19,6 +19,7 @@ loadEnv({ path: resolve(__dirname, '.env') });
 import express from 'express';
 import { generateContentRouter } from './src/routes/generateContent.routes.mjs';
 import { errorHandler } from './src/middlewares/errorHandler.mjs';
+import { DEFAULT_PORT } from './src/config.mjs';
 
 const app = express();
 app.use(express.json());
@@ -32,7 +33,7 @@ app.use('/', generateContentRouter);
 // errorHandler MUST be registered last (Express 4-arg signature is the trigger).
 app.use(errorHandler);
 
-const PORT = process.env.PORT ?? 3000;
+const PORT = process.env.PORT ?? DEFAULT_PORT;
 const server = app.listen(PORT, () => {
   console.log(`[the-oracle] listening on port ${PORT}`);
 });

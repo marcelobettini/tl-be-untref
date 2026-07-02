@@ -7,6 +7,7 @@ import express from 'express';
 import request from 'supertest';
 import { buildGenerateContentRouter } from '../src/routes/generateContent.routes.mjs';
 import { AppError } from '../src/errors/AppError.mjs';
+import { DEFAULT_MODEL, PROMPT_MAX_LENGTH } from '../src/config.mjs';
 
 // --- Test fixtures ---------------------------------------------------------
 
@@ -17,7 +18,7 @@ function buildApp(ask) {
   return app;
 }
 
-function okService(text = 'mocked answer', model = 'gemini-flash-latest') {
+function okService(text = 'mocked answer', model = DEFAULT_MODEL) {
   return async () => ({ text, model });
 }
 
@@ -30,13 +31,13 @@ function failingService(statusCode, kind, safeMessage) {
 // --- Tests -----------------------------------------------------------------
 
 test('POST /generate-content returns 200 with { text, model } on success', async () => {
-  const app = buildApp(okService('hello world', 'gemini-flash-latest'));
+  const app = buildApp(okService('hello world', DEFAULT_MODEL));
   const res = await request(app)
     .post('/generate-content')
     .send({ question: 'hi' });
   assert.equal(res.status, 200);
   assert.equal(res.body.text, 'hello world');
-  assert.equal(res.body.model, 'gemini-flash-latest');
+  assert.equal(res.body.model, DEFAULT_MODEL);
 });
 
 test('POST /generate-content returns 400 when body is missing', async () => {
@@ -76,7 +77,7 @@ test('POST /generate-content returns 400 when question exceeds max length', asyn
   const app = buildApp(okService());
   const res = await request(app)
     .post('/generate-content')
-    .send({ question: 'x'.repeat(1001) });
+    .send({ question: 'x'.repeat(PROMPT_MAX_LENGTH + 1) });
   assert.equal(res.status, 400);
 });
 
