@@ -1,11 +1,10 @@
 // THE ORACLE — prompt validation middleware.
 // Feature: endpoint (F3).
-// Validates request body with zod. On failure calls next(AppError 400) and
-// short-circuits the chain. The errorHandler middleware (F4) renders it.
+// Validates request body. On failure calls next(AppError 400) and short-circuits
+// the chain. The errorHandler middleware (F4) renders it.
 
 import { AppError } from '../errors/AppError.mjs';
-
-const PROMPT_MAX = 1000;
+import { PROMPT_MAX_LENGTH } from '../config.mjs';
 
 const promptSchema = {
   parse(input) {
@@ -19,8 +18,8 @@ const promptSchema = {
     if (question.trim() === '') {
       throw new Error('Field "question" must not be empty');
     }
-    if (question.length > PROMPT_MAX) {
-      throw new Error(`Field "question" must be at most ${PROMPT_MAX} characters`);
+    if (question.length > PROMPT_MAX_LENGTH) {
+      throw new Error(`Field "question" must be at most ${PROMPT_MAX_LENGTH} characters`);
     }
     return { question };
   },

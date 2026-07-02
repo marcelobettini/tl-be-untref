@@ -13,8 +13,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AppError } from '../errors/AppError.mjs';
-
-const MODEL_DEFAULT = 'gemini-flash-latest';
+import { DEFAULT_MODEL } from '../config.mjs';
 
 function buildDefaultModel() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -26,7 +25,7 @@ function buildDefaultModel() {
       kind: 'config',
     });
   }
-  const modelName = process.env.GEMINI_MODEL ?? MODEL_DEFAULT;
+  const modelName = process.env.GEMINI_MODEL ?? DEFAULT_MODEL;
   const client = new GoogleGenerativeAI(apiKey);
   return { model: client.getGenerativeModel({ model: modelName }), modelName };
 }
@@ -54,7 +53,7 @@ export async function askGemini(prompt, deps = {}) {
   let model, modelName;
   if (deps.model) {
     model = deps.model;
-    modelName = deps.modelName ?? MODEL_DEFAULT;
+    modelName = deps.modelName ?? DEFAULT_MODEL;
   } else {
     const built = buildDefaultModel();
     model = built.model;
