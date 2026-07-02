@@ -1,23 +1,23 @@
-// THE ORACLE — POST /generate-content route.
+// THE ORACLE — ruta POST /generate-content.
 // Feature: endpoint (F3).
-// Validates the body, calls the injected service, and returns { text, model }.
-// Error handling is delegated to the errorHandler middleware (F4) — we only
-// call next(err) on failure. Never expose SDK errors directly.
+// Valida el body, llama al servicio inyectado y devuelve { text, model }.
+// El manejo de errores se delega al middleware errorHandler (F4) — solo llamamos
+// a next(err) en caso de fallo. Nunca exponer errores del SDK directamente.
 
 import { Router } from 'express';
-import { askGemini as defaultAskGemini } from '../services/gemini.service.mjs';
-import { validatePrompt } from '../middlewares/validatePrompt.mjs';
+import { askGemini as defaultAskGemini } from "../services/gemini.service.mjs";
+import { validatePrompt } from "../middlewares/validatePrompt.mjs";
 
 /**
- * Build the /generate-content router.
+ * Construye el router /generate-content.
  * @param {object} [deps]
- * @param {Function} [deps.ask] - async (question) => {text, model}. Defaults to real askGemini.
+ * @param {Function} [deps.ask] - async (question) => {text, model}. Por defecto usa askGemini real.
  */
 export function buildGenerateContentRouter(deps = {}) {
   const ask = deps.ask ?? defaultAskGemini;
   const router = Router();
 
-  router.post('/generate-content', validatePrompt, async (req, res, next) => {
+  router.post("/generate-content", validatePrompt, async (req, res, next) => {
     try {
       const { question } = req.validated;
       const result = await ask(question);
@@ -30,5 +30,5 @@ export function buildGenerateContentRouter(deps = {}) {
   return router;
 }
 
-// Backwards-compatible default export (used by server.mjs).
+// Export por compatibilidad hacia atrás (usado por server.mjs).
 export const generateContentRouter = buildGenerateContentRouter();
