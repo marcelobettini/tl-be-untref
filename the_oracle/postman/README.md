@@ -1,69 +1,69 @@
-# Postman collection — THE ORACLE
+# Colección de Postman — THE ORACLE
 
-This directory contains a Postman collection that exercises every error path
-of the `/generate-content` endpoint and the no-leak guarantee from the
-`errorHandler` middleware.
+Este directorio contiene una colección de Postman que ejercita cada camino
+de error del endpoint `/generate-content` y la garantía de no-leak del
+middleware `errorHandler`.
 
-## Files
+## Archivos
 
-- `the_oracle.postman_collection.json` — the collection (7 requests).
-- `the_oracle.postman_environment.json` — environment with `baseUrl` and `GEMINI_API_KEY`.
+- `the_oracle.postman_collection.json` — la colección (7 requests).
+- `the_oracle.postman_environment.json` — environment con `baseUrl` y `GEMINI_API_KEY`.
 
-## Import into Postman
+## Importar en Postman
 
-1. Open Postman.
-2. **File > Import** → drag both JSON files.
-3. The collection "THE ORACLE" and the environment "THE ORACLE (local)" will appear in the sidebar.
-4. Top-right of Postman, select the environment "THE ORACLE (local)" from the dropdown.
-5. Click the eye icon next to the dropdown → edit `GEMINI_API_KEY`:
-   - Leave it empty (or set to `dummy`) to run the failure cases.
-   - Set a real key to also exercise the success case.
+1. Abrí Postman.
+2. **File > Import** → arrastrá ambos archivos JSON.
+3. La colección "THE ORACLE" y el environment "THE ORACLE (local)" van a aparecer en la barra lateral.
+4. Arriba a la derecha de Postman, seleccioná el environment **"THE ORACLE (local)"** del dropdown.
+5. Cliqueá el ícono del ojo al lado del dropdown → editá `GEMINI_API_KEY`:
+   - Dejala vacía (o poné `dummy`) para correr los casos de error.
+   - Poné una key real para también ejercitar el caso de éxito.
 
-## Run the server first
+## Arrancá el server primero
 
 ```bash
-# from the repo root
+# desde la raíz del repo
 npm run start:oracle
 ```
 
-For the "Invalid API key" test (case 7) the server MUST be started with an
-invalid `GEMINI_API_KEY` so the upstream returns 400 with reason
-`API_KEY_INVALID`:
+Para el test "Invalid API key" (caso 7) el server DEBE estar arrancado con
+una `GEMINI_API_KEY` inválida para que el upstream devuelva 400 con la
+`reason` `API_KEY_INVALID`:
 
 ```bash
 GEMINI_API_KEY=dummy npm run start:oracle
 ```
 
-The collection expects the server on `http://127.0.0.1:3000` (matches
-`baseUrl` in the environment).
+La colección espera al server en `http://127.0.0.1:3000` (coincide con
+`baseUrl` en el environment).
 
-## Run the collection
+## Correr la colección
 
-- **GUI:** open the collection, click "Run", then "Run THE ORACLE".
-- **CLI (newman):** install with `npm install -g newman`, then:
+- **GUI:** abrí la colección, cliqueá "Run", después "Run THE ORACLE".
+- **CLI (newman):** instalá con `npm install -g newman`, después:
   ```bash
   newman run the_oracle/postman/the_oracle.postman_collection.json \
            --env the_oracle/postman/the_oracle.postman_environment.json
   ```
 
-## What each request tests
+## Qué testea cada request
 
-| # | Request | Expected status | Validates |
+| # | Request | Status esperado | Valida |
 | --- | --- | --- | --- |
-| 1 | `GET /health` | 200 | Service alive, no SDK leak |
-| 2 | `POST /generate-content` valid | 200 (or skip) | Happy path: `{ text, model }` |
-| 3 | `POST /generate-content` empty body `{}` | 400 | Missing `question` |
-| 4 | `POST /generate-content` `question: ""` | 400 | Empty `question` |
-| 5 | `POST /generate-content` `question: 12345` | 400 | Non-string `question` (no value leak) |
-| 6 | `POST /generate-content` 1001-char `question` | 400 | Length validation (no length leak) |
-| 7 | `POST /generate-content` valid body, invalid key | 401 | Reason → 401 (not 400), no SDK leak |
+| 1 | `GET /health` | 200 | Servicio vivo, sin leak del SDK |
+| 2 | `POST /generate-content` válido | 200 (o skip) | Happy path: `{ text, model }` |
+| 3 | `POST /generate-content` cuerpo vacío `{}` | 400 | Falta `question` |
+| 4 | `POST /generate-content` `question: ""` | 400 | `question` vacía |
+| 5 | `POST /generate-content` `question: 12345` | 400 | `question` no-string (sin leak del valor) |
+| 6 | `POST /generate-content` `question` de 1001 chars | 400 | Validación de longitud (sin leak del largo) |
+| 7 | `POST /generate-content` cuerpo válido, key inválida | 401 | Reason → 401 (no 400), sin leak del SDK |
 
-## No-leak contract
+## Contrato de no-leak
 
-Every request asserts that the response body does NOT contain any of:
+Cada request asegura que el cuerpo de la respuesta NO contiene ninguno de:
 - `API_KEY_INVALID`, `PERMISSION_DENIED`, `RESOURCE_EXHAUSTED`,
   `DEADLINE_EXCEEDED`, `UNAVAILABLE`, `NOT_FOUND`
 - `GoogleGenerativeAI`, `googleapis`, `generativelanguage`
-- Internal details (length constants, validation function names)
+- Detalles internos (constantes de longitud, nombres de funciones de validación)
 
-This is the IDEA.md point 7 guarantee.
+Esta es la garantía del punto 7 de IDEA.md.
