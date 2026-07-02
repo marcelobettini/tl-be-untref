@@ -14,7 +14,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AppError } from '../errors/AppError.mjs';
 
-const MODEL_DEFAULT = 'gemini-2.0-flash';
+const MODEL_DEFAULT = 'gemini-flash-latest';
 
 function buildDefaultModel() {
   const apiKey = process.env.GEMINI_API_KEY;

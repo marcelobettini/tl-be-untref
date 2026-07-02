@@ -23,7 +23,7 @@ Environment variables (see `the_oracle/.env.example`):
 | Variable | Default | Notes |
 | --- | --- | --- |
 | `GEMINI_API_KEY` | _(required)_ | Get one at https://aistudio.google.com/apikey |
-| `GEMINI_MODEL` | `gemini-1.5-flash` | Any Gemini model name |
+| `GEMINI_MODEL` | `gemini-flash-latest` | Any Gemini model name |
 | `PORT` | `3000` | HTTP port |
 
 ---
@@ -45,7 +45,7 @@ curl http://127.0.0.1:3000/health
 curl -X POST http://127.0.0.1:3000/generate-content \
      -H 'Content-Type: application/json' \
      -d '{"question":"What is the capital of France?"}'
-# -> {"text":"The capital of France is Paris.","model":"gemini-1.5-flash"}
+# -> {"text":"The capital of France is Paris.","model":"gemini-flash-latest"}
 ```
 
 ---

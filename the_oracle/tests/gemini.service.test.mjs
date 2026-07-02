@@ -28,9 +28,9 @@ test('askGemini returns { text, model } on success', async () => {
   const model = fakeModel(async () => ({
     response: { text: () => 'hello world' },
   }));
-  const out = await askGemini('hi', { model, modelName: 'gemini-2.0-flash' });
+  const out = await askGemini('hi', { model, modelName: 'gemini-flash-latest' });
   assert.equal(out.text, 'hello world');
-  assert.equal(out.model, 'gemini-2.0-flash');
+  assert.equal(out.model, 'gemini-flash-latest');
 });
 
 test('askGemini throws AppError 400 on empty prompt', async () => {

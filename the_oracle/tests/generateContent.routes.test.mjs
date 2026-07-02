@@ -17,7 +17,7 @@ function buildApp(ask) {
   return app;
 }
 
-function okService(text = 'mocked answer', model = 'gemini-2.0-flash') {
+function okService(text = 'mocked answer', model = 'gemini-flash-latest') {
   return async () => ({ text, model });
 }
 
@@ -30,13 +30,13 @@ function failingService(statusCode, kind, safeMessage) {
 // --- Tests -----------------------------------------------------------------
 
 test('POST /generate-content returns 200 with { text, model } on success', async () => {
-  const app = buildApp(okService('hello world', 'gemini-2.0-flash'));
+  const app = buildApp(okService('hello world', 'gemini-flash-latest'));
   const res = await request(app)
     .post('/generate-content')
     .send({ question: 'hi' });
   assert.equal(res.status, 200);
   assert.equal(res.body.text, 'hello world');
-  assert.equal(res.body.model, 'gemini-2.0-flash');
+  assert.equal(res.body.model, 'gemini-flash-latest');
 });
 
 test('POST /generate-content returns 400 when body is missing', async () => {
