@@ -1,0 +1,227 @@
+{
+  "info": {
+    "_postman_id": "the-oracle-collection-001",
+    "name": "THE ORACLE",
+    "description": "Tests for the /generate-content endpoint of THE ORACLE feature. Covers all error codes from the no-leak error handler (per IDEA.md point 6/7).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:3000" }
+  ],
+  "item": [
+    {
+      "name": "1. Health probe (always passes)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('body has status ok', () => pm.expect(body.status).to.eql('ok'));",
+              "pm.test('body has service the-oracle', () => pm.expect(body.service).to.eql('the-oracle'));",
+              "pm.test('no SDK fields leaked', () => {",
+              "  const s = JSON.stringify(body);",
+              "  pm.expect(s).to.not.include('GoogleGenerativeAI');",
+              "  pm.expect(s).to.not.include('googleapis');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Valid request — 200 with { text, model }",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"question\": \"What is the capital of France?\"\n}" },
+        "url": { "raw": "{{baseUrl}}/generate-content", "host": ["{{baseUrl}}"], "path": ["generate-content"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Skip when no real key is configured.",
+              "const key = pm.environment.get('GEMINI_API_KEY') || '';",
+              "if (!key || key === 'dummy' || key === 'YOUR_KEY_HERE') {",
+              "  pm.test.skip('requires a real GEMINI_API_KEY (set it in the environment)', () => {});",
+              "  return;",
+              "}",
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('body has text', () => pm.expect(body).to.have.property('text').that.is.a('string'));",
+              "pm.test('body has model', () => pm.expect(body).to.have.property('model').that.is.a('string'));",
+              "pm.test('text is non-empty', () => pm.expect(body.text.length).to.be.greaterThan(0));",
+              "pm.test('no SDK fields leaked', () => {",
+              "  const s = JSON.stringify(body);",
+              "  pm.expect(s).to.not.include('GoogleGenerativeAI');",
+              "  pm.expect(s).to.not.include('googleapis');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Missing question — 400",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": { "raw": "{{baseUrl}}/generate-content", "host": ["{{baseUrl}}"], "path": ["generate-content"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('body shape { error: { status, message } }', () => {",
+              "  pm.expect(body).to.have.nested.property('error.status', 400);",
+              "  pm.expect(body).to.have.nested.property('error.message', 'Bad request');",
+              "});",
+              "pm.test('no SDK fields leaked', () => {",
+              "  const s = JSON.stringify(body);",
+              "  pm.expect(s).to.not.include('GoogleGenerativeAI');",
+              "  pm.expect(s).to.not.include('googleapis');",
+              "  pm.expect(s).to.not.include('validatePrompt');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Empty question — 400",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"question\": \"\"\n}" },
+        "url": { "raw": "{{baseUrl}}/generate-content", "host": ["{{baseUrl}}"], "path": ["generate-content"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('generic message only', () => pm.expect(body.error.message).to.eql('Bad request'));",
+              "pm.test('no SDK fields leaked', () => {",
+              "  const s = JSON.stringify(body);",
+              "  pm.expect(s).to.not.include('GoogleGenerativeAI');",
+              "  pm.expect(s).to.not.include('googleapis');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Non-string question — 400",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"question\": 12345\n}" },
+        "url": { "raw": "{{baseUrl}}/generate-content", "host": ["{{baseUrl}}"], "path": ["generate-content"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('generic message only', () => pm.expect(body.error.message).to.eql('Bad request'));",
+              "pm.test('no internal detail leaked', () => {",
+              "  const s = JSON.stringify(body);",
+              "  pm.expect(s).to.not.include('12345');",
+              "  pm.expect(s).to.not.include('GoogleGenerativeAI');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Question too long — 400",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"question\": \"x\".repeat(1001)\n}" },
+        "url": { "raw": "{{baseUrl}}/generate-content", "host": ["{{baseUrl}}"], "path": ["generate-content"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('no length info leaked', () => {",
+              "  const s = JSON.stringify(body);",
+              "  pm.expect(s).to.not.include('1000');",
+              "  pm.expect(s).to.not.include('characters');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Invalid API key — 401 (no SDK leak)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"question\": \"hi\"\n}" },
+        "url": { "raw": "{{baseUrl}}/generate-content", "host": ["{{baseUrl}}"], "path": ["generate-content"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// For this case the server MUST be running with GEMINI_API_KEY=dummy (or any invalid key).",
+              "pm.test('status 401', () => pm.response.to.have.status(401));",
+              "const body = pm.response.json();",
+              "pm.test('generic message only', () => pm.expect(body.error.message).to.eql('Unauthorized'));",
+              "// CRITICAL: the response must never leak Gemini SDK fields.",
+              "pm.test('no SDK fields leaked', () => {",
+              "  const s = JSON.stringify(body);",
+              "  pm.expect(s).to.not.include('API_KEY_INVALID');",
+              "  pm.expect(s).to.not.include('PERMISSION_DENIED');",
+              "  pm.expect(s).to.not.include('RESOURCE_EXHAUSTED');",
+              "  pm.expect(s).to.not.include('DEADLINE_EXCEEDED');",
+              "  pm.expect(s).to.not.include('UNAVAILABLE');",
+              "  pm.expect(s).to.not.include('NOT_FOUND');",
+              "  pm.expect(s).to.not.include('GoogleGenerativeAI');",
+              "  pm.expect(s).to.not.include('googleapis');",
+              "  pm.expect(s).to.not.include('generativelanguage');",
+              "});",
+              "pm.test('body is exactly { error: { status, message } }', () => {",
+              "  const keys = Object.keys(body).sort();",
+              "  pm.expect(keys).to.eql(['error']);",
+              "  pm.expect(Object.keys(body.error).sort()).to.eql(['message', 'status']);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
