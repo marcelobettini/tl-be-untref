@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start:oracle": "node the_oracle/server.mjs",
-    "test:oracle": "node --test the_oracle/tests/"
+    "test:oracle": "node --test the_oracle/tests/*.test.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
