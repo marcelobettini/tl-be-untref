@@ -1,23 +1,23 @@
-// THE ORACLE — gemini.service unit tests.
-// Uses node:test (native). Mocks the generative model via dependency injection
-// (the second arg of askGemini), so we don't need loader hooks or external libs.
+// THE ORACLE — tests unitarios de gemini.service.
+// Usa node:test (nativo). Mockea el modelo generativo vía inyección de dependencias
+// (el segundo arg de askGemini), por lo que no necesitamos loader hooks ni librerías externas.
 
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { askGemini } from '../src/services/gemini.service.mjs';
-import { AppError } from '../src/errors/AppError.mjs';
-import { DEFAULT_MODEL } from '../src/config.mjs';
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { askGemini } from "../src/services/gemini.service.mjs";
+import { AppError } from "../src/errors/AppError.mjs";
+import { DEFAULT_MODEL } from "../src/config.mjs";
 
-// --- Test fixtures ---------------------------------------------------------
+// --- Fixtures de prueba ---------------------------------------------------
 
 function fakeModel(behavior) {
   return { generateContent: behavior };
 }
 
 function makeSdkError(reason, opts = {}) {
-  // Mirrors the SDK's error shape: prefixed message + optional .status
+  // Refleja la forma del error del SDK: mensaje prefijado + .status opcional
   const err = new Error(`[GoogleGenerativeAI Error]: ${reason}`);
-  err.name = 'GoogleGenerativeAIFetchError';
+  err.name = "GoogleGenerativeAIFetchError";
   if (opts.status !== undefined) err.status = opts.status;
   if (opts.statusText) err.statusText = opts.statusText;
   return err;
@@ -25,51 +25,63 @@ function makeSdkError(reason, opts = {}) {
 
 // --- Tests -----------------------------------------------------------------
 
-test('askGemini returns { text, model } on success', async () => {
+test("askGemini returns { text, model } on success", async () => {
   const model = fakeModel(async () => ({
-    response: { text: () => 'hello world' },
+    response: { text: () => "hello world" },
   }));
-  const out = await askGemini('hi', { model, modelName: DEFAULT_MODEL });
-  assert.equal(out.text, 'hello world');
+  const out = await askGemini("hi", { model, modelName: DEFAULT_MODEL });
+  assert.equal(out.text, "hello world");
   assert.equal(out.model, DEFAULT_MODEL);
 });
 
-test('askGemini throws AppError 400 on empty prompt', async () => {
-  const model = fakeModel(async () => { throw new Error('should not be called'); });
+test("askGemini throws AppError 400 on empty prompt", async () => {
+  const model = fakeModel(async () => {
+    throw new Error("should not be called");
+  });
   await assert.rejects(
-    () => askGemini('', { model }),
-    (err) => err instanceof AppError && err.statusCode === 400 && err.kind === 'validation',
+    () => askGemini("", { model }),
+    (err) =>
+      err instanceof AppError &&
+      err.statusCode === 400 &&
+      err.kind === "validation",
   );
 });
 
-test('askGemini throws AppError 400 on non-string prompt', async () => {
-  const model = fakeModel(async () => { throw new Error('should not be called'); });
+test("askGemini throws AppError 400 on non-string prompt", async () => {
+  const model = fakeModel(async () => {
+    throw new Error("should not be called");
+  });
   await assert.rejects(
     () => askGemini(null, { model }),
-    (err) => err.statusCode === 400 && err.kind === 'validation',
+    (err) => err.statusCode === 400 && err.kind === "validation",
   );
 });
 
-test('askGemini wraps SDK errors in AppError 502 with cause attached', async () => {
-  const sdkErr = makeSdkError('RESOURCE_EXHAUSTED', { status: 429 });
-  const model = fakeModel(async () => { throw sdkErr; });
+test("askGemini wraps SDK errors in AppError 502 with cause attached", async () => {
+  const sdkErr = makeSdkError("RESOURCE_EXHAUSTED", { status: 429 });
+  const model = fakeModel(async () => {
+    throw sdkErr;
+  });
   await assert.rejects(
-    () => askGemini('hi', { model }),
+    () => askGemini("hi", { model }),
     (err) => {
       assert.ok(err instanceof AppError);
       assert.equal(err.statusCode, 502); // default; F4 will refine
-      assert.equal(err.kind, 'gemini');
-      assert.strictEqual(err.cause, sdkErr, 'must preserve cause for F4');
+      assert.equal(err.kind, "gemini");
+      assert.strictEqual(err.cause, sdkErr, "must preserve cause for F4");
       assert.match(err.cause.message, /RESOURCE_EXHAUSTED/);
       return true;
     },
   );
 });
 
-test('askGemini throws AppError 500 (config) when GEMINI_API_KEY missing and no model injected', async () => {
+test("askGemini throws AppError 500 (config) when GEMINI_API_KEY missing and no model injected", async () => {
   delete process.env.GEMINI_API_KEY;
   await assert.rejects(
-    () => askGemini('hi'),
-    (err) => err instanceof AppError && err.statusCode === 500 && err.kind === 'config',
+    () => askGemini("hi"),
+    (err) =>
+      err instanceof AppError &&
+      err.statusCode === 500 &&
+      err.kind === "config",
   );
 });

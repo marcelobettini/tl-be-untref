@@ -1,36 +1,36 @@
-// THE ORACLE — entry point (ESM via .mjs to avoid clashing with CommonJS files in repo root)
-// Features wired:
-//   F1 — scaffold: minimal Express server with /health probe.
-//   F2 — gemini service (consumed by route, not directly here).
+// THE ORACLE — punto de entrada (ESM vía .mjs para evitar conflicto con archivos CommonJS en la raíz del repo)
+// Funcionalidades activadas:
+//   F1 — scaffold: servidor Express mínimo con sonda /health.
+//   F2 — servicio gemini (consumido por la ruta, no directamente aquí).
 //   F3 — endpoint: POST /generate-content.
-//   F4 — error handler: maps AppError to safe HTTP responses (no SDK leak).
+//   F4 — manejador de errores: mapea AppError a respuestas HTTP seguras (sin filtrar SDK).
 
-// Load .env from the_oracle/ explicitly. dotenv/config defaults to process.cwd(),
-// which is the repo root when invoked via 'npm run start:oracle', but the actual
-// .env for this feature lives inside the_oracle/ so we anchor the path to this
-// file's location via import.meta.url. This way the same command works whether
-// you run it from the repo root, from the_oracle/, or via an absolute path.
-import { config as loadEnv } from 'dotenv';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+// Carga .env desde the_oracle/ explícitamente. dotenv/config usa process.cwd() por defecto,
+// que es la raíz del repo cuando se ejecuta 'npm run start:oracle', pero el .env real
+// para esta funcionalidad vive dentro de the_oracle/, así que anclamos la ruta a la
+// ubicación de este archivo vía import.meta.url. De este modo el mismo comando funciona
+// si lo ejecutas desde la raíz del repo, desde the_oracle/ o con ruta absoluta.
+import { config as loadEnv } from "dotenv";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
-loadEnv({ path: resolve(__dirname, '.env') });
+loadEnv({ path: resolve(__dirname, ".env") });
 
-import express from 'express';
-import { generateContentRouter } from './src/routes/generateContent.routes.mjs';
-import { errorHandler } from './src/middlewares/errorHandler.mjs';
-import { DEFAULT_PORT } from './src/config.mjs';
+import express from "express";
+import { generateContentRouter } from "./src/routes/generateContent.routes.mjs";
+import { errorHandler } from "./src/middlewares/errorHandler.mjs";
+import { DEFAULT_PORT } from "./src/config.mjs";
 
 const app = express();
 app.use(express.json());
 
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', service: 'the-oracle' });
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok", service: "the-oracle" });
 });
 
-app.use('/', generateContentRouter);
+app.use("/", generateContentRouter);
 
-// errorHandler MUST be registered last (Express 4-arg signature is the trigger).
+// errorHandler DEBE registrarse al final (la firma de 4 argumentos de Express lo activa).
 app.use(errorHandler);
 
 const PORT = process.env.PORT ?? DEFAULT_PORT;

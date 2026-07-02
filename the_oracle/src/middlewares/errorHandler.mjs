@@ -1,17 +1,17 @@
-// THE ORACLE — global error handler middleware.
+// THE ORACLE — middleware global de manejo de errores.
 // Feature: error-handler (F4).
-// Maps AppError to safe HTTP responses. Refines the default 502 from the gemini
-// service by inspecting the SDK error attached in `cause`.
+// Mapea AppError a respuestas HTTP seguras. Refina el 502 por defecto del servicio
+// gemini inspeccionando el error del SDK adjunto en `cause`.
 //
-// IMPORTANT (per IDEA.md point 7): the response MUST NOT leak any Gemini SDK
-// field (status, statusText, errorDetails, code, stack, message). Only the
-// refined statusCode and a generic safeMessage reach the client.
+// IMPORTANTE (según IDEA.md punto 7): la respuesta NO DEBE filtrar ningún campo del SDK
+// de Gemini (status, statusText, errorDetails, code, stack, message). Solo el
+// statusCode refinado y un safeMessage genérico llegan al cliente.
 //
-// Mapping (priority order):
-//   1. If cause.status is a Gemini-style 401, 403, 404, 408, 429, 503, 502 ->
-//      use that exact status. (The SDK returns the upstream HTTP code here.)
-//   2. If cause.errorDetails contains a "reason" field (Google RPC style),
-//      map keywords to our status codes:
+// Mapeo (orden de prioridad):
+//   1. Si cause.status es un código Gemini 401, 403, 404, 408, 429, 503, 502 ->
+//      usar ese mismo status. (El SDK devuelve aquí el código HTTP upstream.)
+//   2. Si cause.errorDetails contiene un campo "reason" (estilo Google RPC),
+//      mapear palabras clave a nuestros códigos:
 //        API_KEY_INVALID          -> 401
 //        PERMISSION_DENIED        -> 403
 //        NOT_FOUND                -> 404
@@ -19,9 +19,9 @@
 //        RESOURCE_EXHAUSTED       -> 429
 //        UNAVAILABLE              -> 503
 //        INTERNAL / UNKNOWN       -> 500
-//   3. Fallback to the AppError.statusCode set by the service (502 for gemini).
+//   3. Fallback al AppError.statusCode establecido por el servicio (502 para gemini).
 
-import { AppError } from '../errors/AppError.mjs';
+import { AppError } from "../errors/AppError.mjs";
 
 const REASON_MAP = {
   API_KEY_INVALID: 401,
@@ -35,15 +35,15 @@ const REASON_MAP = {
 };
 
 const SAFE_MESSAGES = {
-  400: 'Bad request',
-  401: 'Unauthorized',
-  403: 'Forbidden',
-  404: 'Not found',
-  408: 'Request timeout',
-  429: 'Too many requests',
-  500: 'Internal server error',
-  502: 'Upstream service unavailable',
-  503: 'Service temporarily unavailable',
+  400: "Bad request",
+  401: "Unauthorized",
+  403: "Forbidden",
+  404: "Not found",
+  408: "Request timeout",
+  429: "Too many requests",
+  500: "Internal server error",
+  502: "Upstream service unavailable",
+  503: "Service temporarily unavailable",
 };
 
 const SAFE_KINDS = {
@@ -53,18 +53,18 @@ const SAFE_KINDS = {
 };
 
 function pickSafeMessage(statusCode) {
-  return SAFE_MESSAGES[statusCode] ?? 'Internal server error';
+  return SAFE_MESSAGES[statusCode] ?? "Internal server error";
 }
 
 /**
- * Parse the SDK's errorDetails which can be either a JSON string (when sent
- * through the HTTP layer) or already an array. Returns an array of {reason,...}
- * objects, or [] if not parseable.
+ * Analiza errorDetails del SDK, que puede ser una cadena JSON (cuando se envía
+ * por la capa HTTP) o ya un array. Devuelve un array de objetos {reason,...}
+ * o [] si no es parseable.
  */
 function parseErrorDetails(raw) {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw;
-  if (typeof raw === 'string') {
+  if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
@@ -79,16 +79,16 @@ function extractReason(cause) {
   if (!cause) return null;
   const details = parseErrorDetails(cause.errorDetails);
   for (const d of details) {
-    if (d && typeof d === 'object' && d.reason) return String(d.reason);
+    if (d && typeof d === "object" && d.reason) return String(d.reason);
   }
   return null;
 }
 
 function extractKeywordReason(cause) {
-  // The SDK prefixes the message with "[GoogleGenerativeAI Error]:". We look
-  // for the reason keywords in the message itself, since the cause may also
-  // surface a flat error in non-fetch errors.
-  if (!cause || typeof cause.message !== 'string') return null;
+  // El SDK prefija el mensaje con "[GoogleGenerativeAI Error]:". Buscamos
+  // las palabras clave de reason en el propio mensaje, ya que el cause también
+  // puede exponer un error plano en errores no relacionados con fetch.
+  if (!cause || typeof cause.message !== "string") return null;
   const msg = cause.message;
   for (const reason of Object.keys(REASON_MAP)) {
     if (msg.includes(reason)) return reason;
@@ -97,17 +97,17 @@ function extractKeywordReason(cause) {
 }
 
 /**
- * Refine a generic gemini AppError by inspecting its cause.
- * Returns the refined statusCode.
+ * Refina un AppError genérico de gemini inspeccionando su cause.
+ * Devuelve el statusCode refinado.
  *
- * Order of precedence (semantic reason beats raw HTTP code):
- *   1. Google RPC reason in errorDetails (API_KEY_INVALID, etc.) — these are
- *      semantic and override any HTTP code the upstream happened to return.
- *   2. Keyword match in cause.message (covers SDK errors that surface the
- *      reason as plain text instead of structured errorDetails).
- *   3. Upstream HTTP status from the SDK (cause.status), only when no
- *      semantic reason was found AND the status is one we know how to map.
- *   4. Fallback to the AppError's own statusCode.
+ * Orden de precedencia (la razón semántica vence al código HTTP bruto):
+ *   1. Reason de Google RPC en errorDetails (API_KEY_INVALID, etc.) — son
+ *      semánticas y sobrescriben cualquier código HTTP que el upstream haya devuelto.
+ *   2. Coincidencia por palabra clave en cause.message (cubre errores del SDK que
+ *      muestran la reason como texto plano en vez de errorDetails estructurados).
+ *   3. Código HTTP upstream desde el SDK (cause.status), sólo cuando no se encontró
+ *      una reason semántica Y el status es uno que sabemos mapear.
+ *   4. Fallback al statusCode propio del AppError.
  */
 function refineFromGeminiCause(appErr) {
   const cause = appErr.cause;
@@ -120,7 +120,7 @@ function refineFromGeminiCause(appErr) {
     return REASON_MAP[reason];
   }
 
-  if (typeof cause.status === 'number' && SAFE_MESSAGES[cause.status]) {
+  if (typeof cause.status === "number" && SAFE_MESSAGES[cause.status]) {
     return cause.status;
   }
 
@@ -128,54 +128,63 @@ function refineFromGeminiCause(appErr) {
 }
 
 /**
- * Express error-handling middleware (4-arg signature).
+ * Middleware de manejo de errores de Express (firma de 4 argumentos).
  */
 // eslint-disable-next-line no-unused-vars
 export function errorHandler(err, req, res, _next) {
   const timestamp = new Date().toISOString();
 
-  // Map to a normalized AppError.
+  // Mapear a un AppError normalizado.
   let appErr;
   if (err instanceof AppError) {
     appErr = err;
   } else {
-    // Unknown error -> 500, no leak.
-    appErr = new AppError({
-      statusCode: 500,
-      safeMessage: 'Internal server error',
-      internalMessage: err?.message ?? 'unknown',
-      kind: 'app',
-    }, err);
+    // Error desconocido -> 500, sin filtración.
+    appErr = new AppError(
+      {
+        statusCode: 500,
+        safeMessage: "Internal server error",
+        internalMessage: err?.message ?? "unknown",
+        kind: "app",
+      },
+      err,
+    );
   }
 
-  // Refine gemini errors using their cause.
-  // For non-gemini errors, map kind -> default status when AppError has no
-  // explicit statusCode. The safeMessage is ALWAYS picked from SAFE_MESSAGES
-  // based on the final statusCode — we never propagate the service-supplied
-  // safeMessage to the client. This is the no-leak contract.
+  // Refinar errores de gemini usando su cause.
+  // Para errores no-gemini, mapear kind -> status por defecto cuando AppError no tiene
+  // statusCode explícito. El safeMessage SIEMPRE se selecciona de SAFE_MESSAGES
+  // basado en el statusCode final — nunca propagamos el safeMessage provisto por el servicio
+  // al cliente. Este es el contrato de no-filtrado.
   let statusCode;
-  if (appErr.kind === 'gemini') {
+  if (appErr.kind === "gemini") {
     statusCode = refineFromGeminiCause(appErr);
   } else {
     statusCode = appErr.statusCode || SAFE_KINDS[appErr.kind] || 500;
   }
   const safeMessage = pickSafeMessage(statusCode);
 
-  // Internal log: full detail. NEVER returned to the client.
-  console.error(JSON.stringify({
-    timestamp,
-    level: 'error',
-    kind: appErr.kind,
-    statusCode,
-    path: req.path,
-    method: req.method,
-    internalMessage: appErr.internalMessage,
-    cause: appErr.cause
-      ? { name: appErr.cause.name, message: appErr.cause.message, status: appErr.cause.status }
-      : undefined,
-  }));
+  // Registro interno: detalle completo. NUNCA devuelto al cliente.
+  console.error(
+    JSON.stringify({
+      timestamp,
+      level: "error",
+      kind: appErr.kind,
+      statusCode,
+      path: req.path,
+      method: req.method,
+      internalMessage: appErr.internalMessage,
+      cause: appErr.cause
+        ? {
+            name: appErr.cause.name,
+            message: appErr.cause.message,
+            status: appErr.cause.status,
+          }
+        : undefined,
+    }),
+  );
 
-  // External response: ONLY refined status + generic message. No SDK fields.
+  // Respuesta externa: SOLO status refinado + mensaje genérico. Sin campos del SDK.
   res.status(statusCode).json({
     error: { status: statusCode, message: safeMessage },
   });

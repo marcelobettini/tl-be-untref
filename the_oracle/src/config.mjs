@@ -1,9 +1,9 @@
-// THE ORACLE — central configuration.
+// THE ORACLE — configuración central.
 // Feature: refactor (centralize-config).
-// Single source of truth for tunables that used to be hardcoded across multiple
-// files. Change a value here once; service, middlewares, tests, and docs stay
-// in sync via imports.
+// Fuente única de verdad para parámetros ajustables que antes estaban hardcodeados
+// en varios archivos. Cambia un valor aquí una vez; servicio, middlewares, tests y docs
+// permanecen sincronizados vía imports.
 
-export const DEFAULT_MODEL = 'gemini-flash-latest';
+export const DEFAULT_MODEL = "gemini-flash-latest";
 export const DEFAULT_PORT = 3000;
 export const PROMPT_MAX_LENGTH = 1000;
