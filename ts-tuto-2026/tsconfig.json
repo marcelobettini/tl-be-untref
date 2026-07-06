@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    /* --- Módulos: alineado con Node ESM moderno --- */
+    "module": "nodenext",              // resuelve módulos igual que Node (respeta "type": "module")
+    "moduleResolution": "nodenext",    // usa el algoritmo de resolución de Node, no el de bundlers
+    "target": "esnext",                // el runtime es Node 24: no hay que transpilar para navegadores viejos
+
+    /* --- Flujo Node 24 (type stripping, sin build) --- */
+    "noEmit": true,                    // tsc NUNCA genera JS acá: solo chequea tipos (`npm run typecheck`)
+    "allowImportingTsExtensions": true, // permite `import './foo.ts'`, como lo hace Node al ejecutar
+    "erasableSyntaxOnly": true,        // avisa si usás sintaxis que Node NO puede borrar en runtime
+                                        // (enum con valores, namespace con código, parameter properties)
+    "verbatimModuleSyntax": true,      // los imports/exports quedan tal cual escritos (nada de magia al stripear)
+
+    /* --- Rigurosidad de tipos --- */
+    "strict": true,                    // activa todos los chequeos estrictos (null checks, etc.)
+    "exactOptionalPropertyTypes": true, // distingue `undefined` explícito de propiedad ausente
+    "noUncheckedIndexedAccess": true,  // acceder a arr[i] o Record[key] da `T | undefined`, no `T`
+
+    /* --- Calidad de vida --- */
+    "esModuleInterop": true,           // interop prolijo al importar paquetes CommonJS
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,              // no chequea los .d.ts de node_modules (más rápido)
+    "resolveJsonModule": true,         // permite `import data from './data.json'`
+
+    /* --- Tipos de Node disponibles (process, fs, etc.) --- */
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"]
+}
